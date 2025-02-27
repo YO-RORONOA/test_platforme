@@ -81,3 +81,64 @@ class StaffController extends Controller
             ->with('success', 'Statut du test mis à jour avec succès');
     }
     
+    public function availabilities()
+    {
+        $staff = Auth::user()->staff;
+        
+        $availabilities = $staff->availabilities()
+            ->where('date', '>=', now()->format('Y-m-d'))
+            ->orderBy('date')
+            ->get();
+        
+        return view('staff.availabilities.index', compact('availabilities'));
+    }
+    
+    public function storeAvailability(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
+        ]);
+        
+        $staff = Auth::user()->staff;
+        
+        // Vérifier si une disponibilité existe déjà pour cette date
+        $existingAvailability = $staff->availabilities()
+            ->whereDate('date', $request->date)
+            ->first();
+        
+        if ($existingAvailability) {
+            $existingAvailability->update([
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'is_available' => $request->has('is_available'),
+            ]);
+            
+            $message = 'Disponibilité mise à jour avec succès';
+        } else {
+            $staff->availabilities()->create([
+                'date' => $request->date,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'is_available' => $request->has('is_available', true),
+            ]);
+            
+            $message = 'Disponibilité ajoutée avec succès';
+        }
+        
+        return redirect()->route('staff.availabilities')
+            ->with('success', $message);
+    }
+    
+    public function deleteAvailability($id)
+    {
+        $staff = Auth::user()->staff;
+        
+        $availability = $staff->availabilities()->findOrFail($id);
+        $availability->delete();
+        
+        return redirect()->route('staff.availabilities')
+            ->with('success', 'Disponibilité supprimée avec succès');
+    }
+}
