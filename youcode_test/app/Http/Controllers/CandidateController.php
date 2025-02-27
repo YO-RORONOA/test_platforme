@@ -274,3 +274,4 @@ public function viewTests()
     
     return view('candidate.tests.index', compact('presentielTests'));
 }
+}
