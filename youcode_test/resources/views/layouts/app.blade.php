@@ -7,9 +7,11 @@
     <title>{{ config('app.name', 'YouCode') }} - @yield('title')</title>
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
     <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}" defer></script>
-</head>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">
         @include('layouts.navigation')

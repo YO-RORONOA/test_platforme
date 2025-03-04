@@ -6,6 +6,7 @@ use App\Models\Candidate;
 use App\Models\Document;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -17,10 +18,10 @@ class CandidateController extends Controller
         $user = Auth::user();
         $candidate = $user->candidate;
         
-        if (!$candidate) {
-            return redirect()->route('candidate.profile.edit')
-                ->with('warning', 'Veuillez compléter votre profil.');
-        }
+        // if (!$candidate) {
+        //     return redirect()->route('candidate.profile.edit')
+        //         ->with('warning', 'Veuillez compléter votre profil.');
+        // }
         
         $documents = $candidate->documents;
         $quizAttempts = $candidate->quizAttempts;
@@ -39,39 +40,44 @@ class CandidateController extends Controller
         $user = Auth::user();
         $candidate = $user->candidate;
         
-        return view('candidate.profile.edit', compact('candidate'));
+        return view('candidate.profile.edit', compact('candidate', 'user'));
     }
     
     public function updateProfile(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'birth_date' => 'required|date',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'birth_date' => 'required|date',
+        'phone' => 'required|string|max:20',
+        'address' => 'required|string',
+    ]);
+    
+    $user = Auth::user();
+    
+    // Mise à jour de l'utilisateur
+    User::where('id', $user->id)->update([
+        'name' => $request->name
+    ]);
+    
+    // Création ou mise à jour du profil candidat
+    if (!$user->candidate) {
+        Candidate::create([
+            'user_id' => $user->id,
+            'birth_date' => $request->birth_date,
+            'phone' => $request->phone,
+            'address' => $request->address,
         ]);
-        
-        $user = Auth::user();
-        $user->update(['name' => $request->name]);
-        
-        if (!$user->candidate) {
-            $candidate = Candidate::create([
-                'user_id' => $user->id,
-                'birth_date' => $request->birth_date,
-                'phone' => $request->phone,
-                'address' => $request->address,
-            ]);
-        } else {
-            $user->candidate->update([
-                'birth_date' => $request->birth_date,
-                'phone' => $request->phone,
-                'address' => $request->address,
-            ]);
-        }
-        
-        return redirect()->route('candidate.dashboard')
-            ->with('success', 'Profil mis à jour avec succès');
+    } else {
+        Candidate::where('user_id', $user->id)->update([
+            'birth_date' => $request->birth_date,
+            'phone' => $request->phone,
+            'address' => $request->address,
+        ]);
     }
+    
+    return redirect()->route('candidate.dashboard')
+        ->with('success', 'Profil mis à jour avec succès');
+}
     
     public function documents()
     {

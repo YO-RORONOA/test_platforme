@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\QuestionController;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 
 // Routes publiques
@@ -12,6 +13,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Routes d'authentification (fournies par Laravel Breeze)
 require __DIR__.'/auth.php';
+
+Route::get('/dashboard', function () {
+    return View('dashboard');
+})->middleware(['auth'])->name('dashboard');
+
+Route::delete('/profile', [CandidateController::class, 'destroy'])->name('profile.destroy');
 
 // Routes pour les candidats
 Route::middleware(['auth', 'verified'])->prefix('candidate')->name('candidate.')->group(function () {
